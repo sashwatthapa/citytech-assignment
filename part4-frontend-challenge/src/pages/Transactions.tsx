@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { FilterState, DEFAULT_FILTERS } from '../types/transaction';
-import { TransactionList } from '../components/common/TransactionList';
-import { TransactionSummary } from '../components/common/TransactionSummary';
+import { TransactionList } from '../components/transaction/TransactionList';
+import { TransactionSummary } from '../components/transaction/TransactionSummary';
+import { TransactionFilters } from '../components/transaction/TransactionFilters';
+import { Pagination } from '../components/transaction/Pagination';
 import { useTransactions } from '../hooks/useTransactions';
 
 /**
@@ -10,21 +12,45 @@ import { useTransactions } from '../hooks/useTransactions';
  */
 export const Transactions = () => {
   const merchantId = import.meta.env.VITE_DEFAULT_MERCHANT_ID || 'MCH-00001';
-  const [filters] = useState<FilterState>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
 
   const { data, loading, error } = useTransactions(merchantId, filters);
+
+  const handleStartDateChange = (date: string) => {
+    setFilters((prev) => ({ ...prev, startDate: date || undefined, page: 0 }));
+  };
+
+  const handleEndDateChange = (date: string) => {
+    setFilters((prev) => ({ ...prev, endDate: date || undefined, page: 0 }));
+  };
+
+  const handleStatusChange = (status?: string) => {
+    setFilters((prev) => ({ ...prev, status, page: 0 }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters(DEFAULT_FILTERS);
+  };
+
+  const handlePageChange = (page: number) => {
+    setFilters((prev) => ({ ...prev, page }));
+  };
 
   return (
     <main className="container">
       <h1>Transaction Dashboard</h1>
       <p className="subtitle">Merchant: {merchantId}</p>
 
-      {/* TODO: Add TransactionFilters component */}
-      <div className="filters-section">
-        <p style={{ padding: '1rem', background: '#fef3c7', borderRadius: '8px', color: '#92400e' }}>
-          🔧 TODO: Implement TransactionFilters component (date range, status filter)
-        </p>
-      </div>
+      <TransactionFilters
+        startDate={filters.startDate}
+        endDate={filters.endDate}
+        status={filters.status}
+        onStartDateChange={handleStartDateChange}
+        onEndDateChange={handleEndDateChange}
+        onStatusChange={handleStatusChange}
+        onClearFilters={handleClearFilters}
+        disabled={loading}
+      />
 
       {error && (
         <div className="error-message" style={{ padding: '1rem', background: '#fee2e2', borderRadius: '8px', color: '#991b1b', margin: '1rem 0' }}>
@@ -38,7 +64,7 @@ export const Transactions = () => {
         </div>
       )}
 
-      {data && (
+      {!loading && data && (
         <>
           <div className="summary-section">
             <TransactionSummary 
@@ -50,14 +76,20 @@ export const Transactions = () => {
           <div className="transactions-section">
             <TransactionList 
               transactions={data.transactions || []} 
-              loading={loading}
+              loading={false}
             />
           </div>
 
-          {/* TODO: Add Pagination component */}
-          <div className="pagination-section" style={{ padding: '1rem', marginTop: '1rem', background: '#fef3c7', borderRadius: '8px', color: '#92400e' }}>
-            <p>🔧 TODO: Implement Pagination component (showing page {data.page + 1}, {data.totalTransactions} total transactions)</p>
-          </div>
+          {data.totalPages > 1 && (
+            <Pagination
+              currentPage={data.page}
+              totalPages={data.totalPages}
+              totalElements={data.totalTransactions}
+              pageSize={data.size}
+              onPageChange={handlePageChange}
+              disabled={loading}
+            />
+          )}
         </>
       )}
     </main>

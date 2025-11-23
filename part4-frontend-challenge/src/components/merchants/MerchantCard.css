@@ -1,0 +1,104 @@
+.merchant-card {
+  margin-bottom: 1rem;
+}
+
+.merchant-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.merchant-card-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.merchant-card-body {
+  margin-bottom: 1rem;
+}
+
+.merchant-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.merchant-info-row:last-child {
+  border-bottom: none;
+}
+
+.merchant-info-row .label {
+  font-weight: 500;
+  color: #6b7280;
+  flex-shrink: 0;
+  margin-right: 1rem;
+}
+
+.merchant-info-row .value {
+  color: #111827;
+  text-align: right;
+  word-break: break-word;
+}
+
+.merchant-info-row .value a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.merchant-info-row .value a:hover {
+  text-decoration: underline;
+}
+
+.merchant-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Status Badge Styling */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-active {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-inactive {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .merchant-info-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .merchant-info-row .label {
+    margin-bottom: 0.25rem;
+  }
+
+  .merchant-info-row .value {
+    text-align: left;
+  }
+}
