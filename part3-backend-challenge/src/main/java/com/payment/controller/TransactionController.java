@@ -1,26 +1,24 @@
 package com.payment.controller;
 
-import io.micronaut.http.annotation.Controller;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-import io.micronaut.http.HttpResponse;
-import io.micronaut.http.annotation.Get;
-import io.micronaut.http.annotation.Post;
-import io.micronaut.http.annotation.Body;
-import io.micronaut.http.annotation.PathVariable;
-import io.micronaut.http.annotation.QueryValue;
-import io.micronaut.http.annotation.Header;
-import io.swagger.v3.oas.annotations.Operation;
+import com.payment.dto.RestResponse;
+import com.payment.dto.transaction.TransactionRequest;
 import com.payment.entity.TransactionMaster;
-import com.payment.repository.TransactionRepository;
+import com.payment.service.transaction.TransactionService;
+import com.payment.service.transaction.TransactionServiceImpl;
+import io.micronaut.http.annotation.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.inject.Inject;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Mono;
 
-import java.util.Map;
+import java.time.LocalDate;
 import java.util.Optional;
 
 /**
- * Transaction Controller - BASIC IMPLEMENTATION PROVIDED
- * 
- * TODO for Junior Developer:
  * 1. Create TransactionService and inject it
  * 2. Implement actual database queries
  * 3. Add proper pagination
@@ -29,43 +27,48 @@ import java.util.Optional;
  * 6. Return proper TransactionResponse DTOs
  * 7. Add error handling
  */
-@Controller("/api/v1/merchants")
+@Controller("/api/v1/merchant-transaction")
 @Tag(name = "Transactions")
 public class TransactionController {
 
-    private final TransactionRepository transactionRepository;
-    
-    public TransactionController(TransactionRepository transactionRepository) {
-        this.transactionRepository = transactionRepository;
-    }
+    private static final Logger LOG = LoggerFactory.getLogger(TransactionController.class);
 
-    // TODO: Create TransactionService to handle business logic
-    // TODO: Move repository calls to service layer
+    private final TransactionService transactionService;
+
+    @Inject
+    public TransactionController(TransactionServiceImpl transactionService) {
+        this.transactionService = transactionService;
+    }
 
     @Get("/{merchantId}/transactions")
     @Operation(
-        summary = "Get merchant transactions",
-        description = "Returns paginated list of transactions for a merchant. TODO: Implement proper pagination, filtering, and database queries."
+            summary = "Get merchant transactions",
+            description = "Returns paginated list of transactions for a merchant. TODO: Implement proper pagination, filtering, and database queries."
     )
-    public HttpResponse<Map<String, Object>> getTransactions(
+    public Mono<RestResponse> getTransactions(
             @PathVariable String merchantId,
-            @QueryValue Optional<Integer> page,
-            @QueryValue Optional<Integer> size,
+            @QueryValue(defaultValue = "0") @Min(0) int page,
+            @QueryValue(defaultValue = "20") @Min(1) @Max(100) int size,
             @QueryValue Optional<String> startDate,
             @QueryValue Optional<String> endDate,
             @QueryValue Optional<String> status
     ) {
-        // TODO: Replace this stub with actual implementation
-        var transactions = transactionRepository.findByMerchantId(merchantId);
-        return HttpResponse.ok(Map.of(
-            "message", "TODO: Implement proper pagination and filtering",
-            "merchantId", merchantId,
-            "page", page.orElse(0),
-            "size", size.orElse(10),
-            "totalTransactions", transactions.size(),
-            "transactions", transactions,
-            "note", "Basic query implemented. Junior developer should add pagination, date filtering, and status filtering."
-        ));
+        LocalDate start;
+        LocalDate end;
+        try {
+            start = startDate.map(LocalDate::parse).orElse(LocalDate.now().minusMonths(1));
+            end = endDate.map(LocalDate::parse).orElse(LocalDate.now());
+        } catch (Exception e) {
+            LOG.error("Invalid query parameter for dates", e);
+            return Mono.just(RestResponse.error("Invalid date format. Expected yyyy-MM-dd"));
+        }
+
+        return transactionService.getTransactions(merchantId, page, size, start, end, status.orElse("completed"))
+                .map(RestResponse::success)
+                .onErrorResume(error -> {
+                    LOG.error("Failed to get merchant transactions");
+                    return Mono.just(RestResponse.error(error.getMessage()));
+                });
     }
 
     @Post("/{merchantId}/transactions")
@@ -73,19 +76,21 @@ public class TransactionController {
         summary = "Create new transaction",
         description = "Creates a new transaction for a merchant. TODO: Add validation, error handling, and business logic."
     )
-    public HttpResponse<Map<String, Object>> createTransaction(
+    public Mono<RestResponse> createTransaction(
             @PathVariable String merchantId,
             @Body TransactionMaster transaction
     ) {
         // TODO: Add validation
         // TODO: Add error handling
         // TODO: Move to service layer
-        transaction.setMerchantId(merchantId);
-        TransactionMaster saved = transactionRepository.save(transaction);
-        return HttpResponse.created(Map.of(
-            "message", "Transaction created",
-            "transactionId", saved.getTxnId(),
-            "note", "TODO: Add proper validation and error handling"
-        ));
+        var request = new TransactionRequest();
+        request.setMerchantId(merchantId);
+        request.setTransaction(transaction);
+        return transactionService.createTransaction(request)
+                .map(RestResponse::success)
+                .onErrorResume(error -> {
+                    LOG.error("Failed to create merchant transactions");
+                    return Mono.just(RestResponse.error(error.getMessage()));
+                });
     }
 }

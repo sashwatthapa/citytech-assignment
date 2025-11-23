@@ -4,24 +4,24 @@ micronaut:
   server:
     port: 8080
     cors:
-      enabled: true
-      configurations:
-        web:
-          allowed-origins:
-            - http://localhost:3000
-          allowed-methods:
-            - GET
-            - POST
-            - PUT
-            - DELETE
-            - OPTIONS
-            - HEAD
-          allowed-headers:
-            - "*"
-          exposed-headers:
-            - "*"
-          allow-credentials: true
-          max-age: 3600
+      enabled: false
+#      configurations:
+#        web:
+#          allowed-origins:
+#            - http://localhost:3000
+#          allowed-methods:
+#            - GET
+#            - POST
+#            - PUT
+#            - DELETE
+#            - OPTIONS
+#            - HEAD
+#          allowed-headers:
+#            - "*"
+#          exposed-headers:
+#            - "*"
+#          allow-credentials: true
+#          max-age: 3600
   router:
     static-resources:
       swagger:
@@ -30,13 +30,18 @@ micronaut:
       swagger-ui:
         paths: classpath:META-INF/swagger/views/swagger-ui
         mapping: /swagger-ui/**
+  openapi:
+    enabled: true
+  views:
+    swagger:
+          enabled: true
 
 datasources:
   default:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5444}/${DB_NAME:payment_platform}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}
     driverClassName: org.postgresql.Driver
-    username: ${DB_USER:admin}
-    password: ${DB_PASSWORD:admin}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:12345}
     dialect: POSTGRES
     schema-generate: NONE
     maximum-pool-size: 10
@@ -85,11 +90,5 @@ logger:
     io.micronaut.data: DEBUG
 
 # OpenAPI Configuration
-micronaut:
-  openapi:
-    enabled: true
-  views:
-    swagger:
-      enabled: true
 swagger-ui:
   enabled: true
