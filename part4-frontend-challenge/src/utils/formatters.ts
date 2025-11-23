@@ -84,3 +84,15 @@ export const getStatusColor = (status: string): string => {
       return 'default';
   }
 };
+
+export const formatMerchantStatus = (status: string): string => {
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+};
+
+export const formatPhoneNumber = (phone: string): string => {
+  return phone || 'N/A';
+};
+
+export const formatEmail = (email: string): string => {
+  return email || 'N/A';
+};

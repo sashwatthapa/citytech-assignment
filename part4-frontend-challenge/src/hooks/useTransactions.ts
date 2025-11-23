@@ -1,19 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getTransactions } from '../services/transactionService';
-import { FilterState } from '../types/transaction';
-
-interface Transaction {
-  txnId: number;
-  merchantId: string;
-  amount: number;
-  currency: string;
-  status: string;
-  cardType: string;
-  cardLast4: string;
-  authCode: string;
-  txnDate: string;
-  createdAt: string;
-}
+import { FilterState, Transaction } from '../types/transaction';
 
 interface UseTransactionsResult {
   data: {
@@ -21,6 +8,7 @@ interface UseTransactionsResult {
     totalTransactions: number;
     page: number;
     size: number;
+    totalPages: number;
   } | null;
   loading: boolean;
   error: Error | null;
@@ -40,7 +28,16 @@ export const useTransactions = (
       setLoading(true);
       setError(null);
       const response = await getTransactions(merchantId, filters);
-      setData(response as any);
+      
+      if (response.data) {
+        setData({
+          transactions: response.data.transactions || [],
+          totalTransactions: response.data.summary?.totalTransactions || 0,
+          page: response.data.pagination?.page || 0,
+          size: response.data.pagination?.size || response.data.pagination?.pageSize || 20,
+          totalPages: response.data.pagination?.totalPages || 0,
+        });
+      }
     } catch (err) {
       setError(err as Error);
       console.error('Error fetching transactions:', err);

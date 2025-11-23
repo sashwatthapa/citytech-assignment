@@ -2,15 +2,19 @@ import './TransactionList.css';
 
 interface Transaction {
   txnId: number;
-  merchantId: string;
   amount: number;
   currency: string;
   status: string;
+  timestamp: string;
   cardType: string;
   cardLast4: string;
-  authCode: string;
-  txnDate: string;
-  createdAt: string;
+  acquirer?: string;
+  issuer?: string;
+  // Legacy fields
+  merchantId?: string;
+  authCode?: string;
+  txnDate?: string;
+  createdAt?: string;
 }
 
 interface TransactionListProps {
@@ -70,7 +74,7 @@ export const TransactionList = ({ transactions, loading }: TransactionListProps)
           {transactions.map((txn) => (
             <tr key={txn.txnId}>
               <td className="txn-id">#{txn.txnId}</td>
-              <td>{formatDate(txn.txnDate)}</td>
+              <td>{formatDate(txn.txnDate || txn.timestamp)}</td>
               <td className="amount">{formatAmount(txn.amount, txn.currency)}</td>
               <td>
                 <span className="card-info">
@@ -82,7 +86,7 @@ export const TransactionList = ({ transactions, loading }: TransactionListProps)
                   {txn.status}
                 </span>
               </td>
-              <td className="auth-code">{txn.authCode}</td>
+              <td className="auth-code">{txn.authCode || txn.acquirer || '-'}</td>
             </tr>
           ))}
         </tbody>
