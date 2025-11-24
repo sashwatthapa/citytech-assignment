@@ -6,13 +6,14 @@ import io.micronaut.data.jdbc.annotation.JdbcRepository;
 import io.micronaut.data.model.Page;
 import io.micronaut.data.model.Pageable;
 import io.micronaut.data.model.query.builder.sql.Dialect;
-import io.micronaut.data.repository.CrudRepository;
+import io.micronaut.data.repository.reactive.ReactorCrudRepository;
+import reactor.core.publisher.Mono;
 
 @Repository
 @JdbcRepository(dialect = Dialect.POSTGRES)
-public interface MerchantRepository extends CrudRepository<Merchant, Long> {
+public interface MerchantRepository extends ReactorCrudRepository<Merchant, Long> {
 
-    Merchant findByMerchantId(Long merchantId);
+    Mono<Merchant> findByMerchantId(Long merchantId);
 
-    Page<Merchant> findAll(Pageable pageable);
+    Mono<Page<Merchant>> findAll(Pageable pageable);
 }

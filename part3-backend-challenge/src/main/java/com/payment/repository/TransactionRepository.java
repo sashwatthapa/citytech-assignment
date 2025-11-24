@@ -1,13 +1,12 @@
 package com.payment.repository;
 
 import com.payment.dto.transaction.StatusSummary;
-import com.payment.entity.TransactionDetail;
 import com.payment.entity.TransactionMaster;
 import io.micronaut.data.annotation.Query;
 import io.micronaut.data.annotation.Repository;
 import io.micronaut.data.jdbc.annotation.JdbcRepository;
 import io.micronaut.data.model.query.builder.sql.Dialect;
-import io.micronaut.data.repository.CrudRepository;
+import io.micronaut.data.repository.reactive.ReactorCrudRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -25,7 +24,7 @@ import java.util.List;
  */
 @Repository
 @JdbcRepository(dialect = Dialect.POSTGRES)
-public interface TransactionRepository extends CrudRepository<TransactionMaster, Long> {
+public interface TransactionRepository extends ReactorCrudRepository<TransactionMaster, Long> {
 
     // Example: Basic finder method (provided)
     List<TransactionMaster> findByMerchantId(String merchantId);
@@ -56,13 +55,6 @@ public interface TransactionRepository extends CrudRepository<TransactionMaster,
               AND (:status IS NULL OR LOWER(tm.status) = LOWER(:status));
             """)
     Mono<Long> countByMerchantIdAndDateRange(String merchantId, Instant startDate, Instant endDate, String status);
-
-    @Query("""
-            SELECT *
-            FROM operators.transaction_details td
-            WHERE td.master_txn_id IN (:masterTxnIds);
-            """)
-    Flux<TransactionDetail> findDetailsByMasterTxnIds(List<Long> masterTxnIds);
 
     @Query("""
             SELECT status, COUNT(*) as txn_count, SUM(amount) as total_amount
