@@ -4,27 +4,33 @@ import com.payment.dto.Pagination;
 import com.payment.dto.transaction.*;
 import com.payment.entity.TransactionDetail;
 import com.payment.entity.TransactionMaster;
+import com.payment.repository.TransactionDetailRepository;
 import com.payment.repository.TransactionRepository;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Singleton
 public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final TransactionDetailRepository transactionDetailRepository;
 
     @Inject
-    public TransactionServiceImpl(TransactionRepository transactionRepository) {
+    public TransactionServiceImpl(TransactionRepository transactionRepository,
+                                  TransactionDetailRepository transactionDetailRepository) {
         this.transactionRepository = transactionRepository;
+        this.transactionDetailRepository = transactionDetailRepository;
     }
 
     @Override
@@ -34,7 +40,7 @@ public class TransactionServiceImpl implements TransactionService {
         long offset = (long) page * size;
 
         Mono<List<TransactionMaster>> txnMono = transactionRepository.findByMerchantIdAndDateRange(merchantId,
-                start, end, status, size, offset)
+                        start, end, status, size, offset)
                 .collectList();
 
         Mono<Long> countMono = transactionRepository.countByMerchantIdAndDateRange(merchantId, start, end, status);
@@ -56,7 +62,7 @@ public class TransactionServiceImpl implements TransactionService {
                             .map(TransactionMaster::getTxnId)
                             .toList();
 
-                    return transactionRepository.findDetailsByMasterTxnIds(masterIds)
+                    return transactionDetailRepository.findDetailsByMasterTxnIds(masterIds)
                             .collectList()
                             .map(details -> {
                                 Map<Long, List<Detail>> detailsMap = details.stream()
@@ -141,33 +147,30 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Mono<CreateTransactionResponse> createTransaction(TransactionRequest request) {
-        return Mono.fromCallable(() -> {
-            TransactionMaster tm = request.getTransaction();
-            if (tm == null) {
-                throw new IllegalArgumentException("Transaction details are required");
-            }
+        TransactionMaster tm = request.getTransaction();
+        if (tm == null) {
+            throw new IllegalArgumentException("Transaction details are required");
+        }
 
-            tm.setMerchantId(request.getMerchantId());
+        tm.setMerchantId(request.getMerchantId());
 
-            tm.setTxnId(null);
+        tm.setTxnId(null);
 
-            Instant now = Instant.now();
-            if (tm.getCreatedAt() == null) {
-                tm.setCreatedAt(now);
-            }
-            if (tm.getLocalTxnDateTime() == null) {
-                tm.setLocalTxnDateTime(now);
-            }
-            if (tm.getTxnDate() == null) {
-                tm.setTxnDate(new java.sql.Date(now.toEpochMilli()));
-            }
-            if (tm.getStatus() == null) {
-                tm.setStatus("PENDING");
-            }
+        Instant now = Instant.now();
+        if (tm.getCreatedAt() == null) {
+            tm.setCreatedAt(now);
+        }
+        if (tm.getLocalTxnDateTime() == null) {
+            tm.setLocalTxnDateTime(now);
+        }
+        if (tm.getTxnDate() == null) {
+            tm.setTxnDate(new java.sql.Date(now.toEpochMilli()));
+        }
+        if (tm.getStatus() == null) {
+            tm.setStatus("PENDING");
+        }
 
-            return transactionRepository.save(tm);
-        })
-                .subscribeOn(Schedulers.boundedElastic())
+        return transactionRepository.save(tm)
                 .map(saved -> {
                     CreateTransactionResponse response = new CreateTransactionResponse();
                     response.setMerchantId(saved.getMerchantId());
