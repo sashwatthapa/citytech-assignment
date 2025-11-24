@@ -14,6 +14,7 @@ public class Merchant {
     @GeneratedValue(GeneratedValue.Type.IDENTITY)
     private Long merchantId;
 
+    @MappedProperty("merchant_code")
     private String merchantCode;
     private String merchantName;
     private String businessType;

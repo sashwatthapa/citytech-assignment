@@ -59,7 +59,6 @@ public class MerchantServiceImpl implements MerchantService {
         merchant.setState(request.state());
         merchant.setPostalCode(request.postalCode());
 
-        merchant.setMerchantCode("MCH-00004");
         merchant.setStatus("pending");
         merchant.setSettlementCurrency("USD");
         merchant.setSettlementCycle("daily");
@@ -71,7 +70,9 @@ public class MerchantServiceImpl implements MerchantService {
 
         return merchantRepository.save(merchant)
                 .map(saved ->
-                        new CreateMerchantResponse(saved.getMerchantId(), saved.getMerchantCode(), saved.getStatus()));
+                        new CreateMerchantResponse(saved.getMerchantId(),
+                                saved.getMerchantCode(),
+                                saved.getStatus()));
     }
 
     @Override
